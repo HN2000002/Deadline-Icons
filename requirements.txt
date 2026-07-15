@@ -1,0 +1,51 @@
+name: Update Notion deadline icons
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Runs every day at 07:15 in the UK, including daylight-saving changes.
+    - cron: "15 7 * * *"
+      timezone: "Europe/London"
+
+permissions:
+  contents: read
+
+jobs:
+  update-icons:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install requirements
+        run: pip install -r requirements.txt
+
+      - name: Update Notion page icons
+        run: python update_deadline_icons.py
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+
+          # Already configured for H's "Master Tasks" data source.
+          NOTION_DATA_SOURCE_ID: "39ecd388-8383-8019-bbf8-000b7ff88754"
+          DUE_DATE_PROPERTY: "Due Date"
+          STATUS_PROPERTY: "Status"
+          DONE_STATUSES: "Done"
+          TIMEZONE: "Europe/London"
+
+          # Red = overdue or due in 0–2 days.
+          # Orange = due in 3–7 days.
+          # Light grey = more than 7 days away.
+          RED_DAYS: "2"
+          ORANGE_DAYS: "7"
+
+          # Native Notion icon. Change this if you prefer another icon-picker shape.
+          ICON_NAME: "circle"
+          DRY_RUN: "false"
